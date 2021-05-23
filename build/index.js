@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var _this = this;
-var _a = require('@notionhq/client'), Client = _a.Client, LogLevel = _a.LogLevel;
+var _a = require('@notionhq/client'), Client = _a.Client, LogLevel = _a.LogLevel, APIErrorCode = _a.APIErrorCode;
 // Initializing a client
 var notion = new Client({
     auth: process.env.NOTION_TOKEN,
@@ -71,16 +71,6 @@ var USER_ID = process.env.USER_ID;
                 console.log(search);
                 if (!search.has_more) return [3 /*break*/, 3];
                 return [4 /*yield*/, notion.search({
-                        query: 'Apple',
-                        sort: {
-                            direction: 'ascending',
-                            timestamp: 'last_edited_time',
-                        },
-                        filter: {
-                            property: 'object',
-                            value: 'page',
-                        },
-                        // Provide previous cursor to restart correctly the search
                         start_cursor: search.next_cursor
                     })];
             case 2:
@@ -188,7 +178,21 @@ var USER_ID = process.env.USER_ID;
             case 16: return [3 /*break*/, 18];
             case 17:
                 err_1 = _a.sent();
-                console.log(err_1);
+                if (err_1.code == APIErrorCode.Unauthorized) {
+                    console.error('Unauthorized error. Definitive.');
+                }
+                if (err_1.code == APIErrorCode.RestrictedResource) {
+                    console.error('Restricted resource error. Definitive.');
+                }
+                if (err_1.code == APIErrorCode.ObjectNotFound) {
+                    console.error('Object not found. Definitive. Check for the right identifier.');
+                }
+                if (err_1.code == APIErrorCode.RateLimited) {
+                    console.error('Rate limit reach, try later. Temporary.');
+                }
+                if (err_1.code == APIErrorCode.InvalidJSON) {
+                    console.error('Invalid JSON. Temporary.');
+                }
                 return [3 /*break*/, 18];
             case 18: return [2 /*return*/];
         }

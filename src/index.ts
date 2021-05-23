@@ -1,4 +1,4 @@
-const { Client, LogLevel } = require('@notionhq/client');
+const { Client, LogLevel, APIErrorCode } = require('@notionhq/client');
 
 // Initializing a client
 const notion = new Client({
@@ -35,16 +35,6 @@ const USER_ID: string | undefined = process.env.USER_ID;
 
         if (search.has_more) {
             const sndSearch = await notion.search({
-                query: 'Apple',
-                sort: {
-                    direction: 'ascending',
-                    timestamp: 'last_edited_time',
-                },
-                filter: {
-                    property: 'object',
-                    value: 'page',
-                },
-                // Provide previous cursor to restart correctly the search
                 start_cursor: search.next_cursor
             })
 
@@ -155,7 +145,25 @@ const USER_ID: string | undefined = process.env.USER_ID;
             console.log(listPageRes);
         }
     } catch (err) {
-        console.log(err);
+        if (err.code == APIErrorCode.Unauthorized) {
+            console.error('Unauthorized error. Definitive.');
+        }
+
+        if (err.code == APIErrorCode.RestrictedResource) {
+            console.error('Restricted resource error. Definitive.');
+        }
+
+        if (err.code == APIErrorCode.ObjectNotFound) {
+            console.error('Object not found. Definitive. Check for the right identifier.');
+        }
+
+        if (err.code == APIErrorCode.RateLimited) {
+            console.error('Rate limit reach, try later. Temporary.');
+        }
+
+        if (err.code == APIErrorCode.InvalidJSON) {
+            console.error('Invalid JSON. Temporary.');
+        }
     }
   
 })();
